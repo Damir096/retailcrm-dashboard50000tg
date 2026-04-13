@@ -13,13 +13,37 @@ import axios from 'axios';
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const contentType = request.headers.get('content-type') || '';
+    let body: any;
+
+    if (contentType.includes('application/x-www-form-urlencoded')) {
+      const formData = await request.formData();
+      body = {};
+      formData.forEach((value, key) => {
+        // RetailCRM часто присылает JSON-строку в одном из полей (например, 'order' или 'payload')
+        // Либо просто полями. Попробуем распарсить если это выглядит как JSON.
+        try {
+          body[key] = typeof value === 'string' && (value.startsWith('{') || value.startsWith('[')) 
+            ? JSON.parse(value) 
+            : value;
+        } catch {
+          body[key] = value;
+        }
+      });
+    } else {
+      body = await request.json();
+    }
     
-    // В вебхуках RetailCRM данные заказа обычно находятся в ключе 'order'
+    console.log('--- Webhook Received ---');
+    console.log('Content-Type:', contentType);
+    console.log('Body Keys:', Object.keys(body));
+
+    // В вебхуках RetailCRM данные заказа часто в ключе 'order'
+    // Если тело пришло как order=JSON_STRING, то берем body.order
     const order = body.order || body;
 
-    if (!order) {
-      console.log('Webhook received but no order data found.');
+    if (!order || typeof order !== 'object') {
+      console.log('Webhook received but no order object found in body.');
       return NextResponse.json({ success: true, message: 'No order data' });
     }
 
