@@ -14,22 +14,27 @@ import axios from 'axios';
 export async function POST(request: Request) {
   try {
     const contentType = request.headers.get('content-type') || '';
-    let body: any;
+    const rawBody = await request.text();
+    let body: any = {};
+
+    console.log('--- Webhook Debug ---');
+    console.log('Content-Type:', contentType);
+    console.log('Raw Body Length:', rawBody.length);
+    console.log('Raw Body Content:', rawBody);
 
     if (contentType.includes('application/x-www-form-urlencoded')) {
-      const formData = await request.formData();
-      body = {};
-      formData.forEach((value, key) => {
-        // Стандартный парсинг JSON-полей
+      const params = new URLSearchParams(rawBody);
+      params.forEach((value, key) => {
+        // Пытаемся распарсить JSON внутри поля
         try {
-          body[key] = typeof value === 'string' && (value.startsWith('{') || value.startsWith('[')) 
+          body[key] = (value.startsWith('{') || value.startsWith('[')) 
             ? JSON.parse(value) 
             : value;
         } catch {
           body[key] = value;
         }
 
-        // Поддержка вложенных полей типа order[totalSumm]
+        // Поддержка вложенных полей типа order[id]
         if (key.includes('[') && key.includes(']')) {
           const matches = key.match(/(.*?)\[(.*?)\]/);
           if (matches) {
@@ -42,12 +47,15 @@ export async function POST(request: Request) {
           }
         }
       });
-    } else {
-      body = await request.json();
+    } else if (rawBody) {
+      try {
+        body = JSON.parse(rawBody);
+      } catch {
+        body = { raw: rawBody };
+      }
     }
     
-    console.log('--- Webhook Diagnostics ---');
-    console.log('Body:', JSON.stringify(body, null, 2));
+    console.log('Parsed Body:', JSON.stringify(body, null, 2));
 
     // Ищем объект заказа
     const order = body.order || body;
