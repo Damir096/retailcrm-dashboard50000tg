@@ -1,7 +1,7 @@
-Наименование;Внешний ID;Цена;Артикул
-Корректирующее бельё Nova Classic;xml-prod-1;15000;ART-1
-Утягивающий комбидресс Nova Slim;xml-prod-2;28000;ART-2
-Корректирующие шорты Nova Shape;xml-prod-3;12000;ART-3
-Бюстье корректирующее Nova Lift;xml-prod-4;22000;ART-4
-Утягивающие леггинсы Nova Fit;xml-prod-5;18000;ART-5
-Утягивающее боди Nova Body;xml-prod-6;35000;ART-6
+"Name","ExternalID","Price","Article"
+"Корректирующее бельё Nova Classic","xml-prod-1","15000","ART-1"
+"Утягивающий комбидресс Nova Slim","xml-prod-2","28000","ART-2"
+"Корректирующие шорты Nova Shape","xml-prod-3","12000","ART-3"
+"Бюстье корректирующее Nova Lift","xml-prod-4","22000","ART-4"
+"Утягивающие леггинсы Nova Fit","xml-prod-5","18000","ART-5"
+"Утягивающее боди Nova Body","xml-prod-6","35000","ART-6"

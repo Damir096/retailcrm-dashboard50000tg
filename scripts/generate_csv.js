@@ -23,12 +23,12 @@ orders.forEach(order => {
   });
 });
 
-let csvContent = 'Наименование;Внешний ID;Цена;Артикул\n';
+// Используем запятую как разделитель и кавычки для надежности
+let csvContent = '"Name","ExternalID","Price","Article"\n';
 Array.from(productMap.values()).forEach((p, index) => {
   const id = index + 1;
-  csvContent += `${p.name};xml-prod-${id};${p.price};ART-${id}\n`;
+  csvContent += `"${p.name}","xml-prod-${id}","${p.price}","ART-${id}"\n`;
 });
 
 fs.writeFileSync(csvPath, csvContent, 'utf8');
-console.log(`✅ Файл создан: ${csvPath}`);
-console.log('Теперь просто загрузите его в RetailCRM через Склад -> Импорт.');
+console.log(`✅ Файл обновлен: ${csvPath}`);
