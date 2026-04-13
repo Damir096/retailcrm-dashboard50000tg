@@ -20,8 +20,7 @@ export async function POST(request: Request) {
       const formData = await request.formData();
       body = {};
       formData.forEach((value, key) => {
-        // RetailCRM часто присылает JSON-строку в одном из полей (например, 'order' или 'payload')
-        // Либо просто полями. Попробуем распарсить если это выглядит как JSON.
+        // Стандартный парсинг JSON-полей
         try {
           body[key] = typeof value === 'string' && (value.startsWith('{') || value.startsWith('[')) 
             ? JSON.parse(value) 
@@ -29,17 +28,28 @@ export async function POST(request: Request) {
         } catch {
           body[key] = value;
         }
+
+        // Поддержка вложенных полей типа order[totalSumm]
+        if (key.includes('[') && key.includes(']')) {
+          const matches = key.match(/(.*?)\[(.*?)\]/);
+          if (matches) {
+            const root = matches[1];
+            const leaf = matches[2];
+            if (!body[root]) body[root] = {};
+            if (typeof body[root] === 'object') {
+              body[root][leaf] = value;
+            }
+          }
+        }
       });
     } else {
       body = await request.json();
     }
     
-    console.log('--- Webhook Received ---');
-    console.log('Content-Type:', contentType);
-    console.log('Body Keys:', Object.keys(body));
+    console.log('--- Webhook Diagnostics ---');
+    console.log('Body:', JSON.stringify(body, null, 2));
 
-    // В вебхуках RetailCRM данные заказа часто в ключе 'order'
-    // Если тело пришло как order=JSON_STRING, то берем body.order
+    // Ищем объект заказа
     const order = body.order || body;
 
     if (!order || typeof order !== 'object') {
@@ -60,7 +70,7 @@ export async function POST(request: Request) {
 
       if (token && chatId) {
         const customerName = `${order.firstName || ''} ${order.lastName || ''}`.trim() || 'Гость';
-        
+
         const message = [
           `🚀 <b>Крупный заказ в RetailCRM!</b>`,
           ``,
@@ -93,12 +103,12 @@ export async function POST(request: Request) {
 
   } catch (error: any) {
     console.error('Webhook processing error:', error.message);
-    
+
     // Возвращаем 200 даже при ошибке парсинга/логики для CRM
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       warning: 'Error occurred but reported as success to CRM',
-      error: error.message 
+      error: error.message
     });
   }
 }
